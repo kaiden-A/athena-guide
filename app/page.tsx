@@ -98,30 +98,46 @@ export default function AthenaChat() {
               {isLoading && <AthenaLoading />}
             </div>
 
-              {/* Input Form */}
-              <div className="p-4 bg-slate-900/60 border-t border-white/5 shrink-0">
-                <form className="relative" onSubmit={handleSubmit}>
-                  <input 
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    className="w-full py-3 pl-5 pr-14 bg-slate-800/90 rounded-xl border border-transparent focus:border-sky-500/50 focus:ring-0 transition-all text-slate-100 text-sm outline-none" 
-                    placeholder="Type something..." 
-                    type="text" 
-                    autoComplete="off"
-                  />
-                  <button 
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-sky-500 text-white p-2 rounded-lg hover:bg-sky-400 transition-all shadow-lg" 
-                    type="submit"
-                  >
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
-                    </svg>
-                  </button>
-                </form>
-                <p className="text-[10px] text-center mt-5 text-slate-500 uppercase tracking-[0.2em] font-medium opacity-60">
-                  GUIDED BY MOTION-U INTELLIGENCE
-                </p>
-              </div>
+            {/* Input Form */}
+            <div className="p-4 bg-slate-900/60 border-t border-white/5 shrink-0">
+              <form className="relative flex items-end gap-2" onSubmit={handleSubmit}>
+                <textarea
+                  rows={1}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Submit on Enter, but allow Shift+Enter for new lines
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
+                  placeholder="Type something..."
+                  className="w-full py-3 pl-5 pr-14 bg-slate-800/90 rounded-xl border border-transparent focus:border-sky-500/50 focus:ring-0 transition-all text-slate-100 text-sm outline-none resize-none min-h-11.5 max-h-40 overflow-y-auto"
+                  style={{
+                    height: 'auto',
+                  }}
+                  ref={(el) => {
+                    if (el) {
+                      el.style.height = 'auto';
+                      el.style.height = `${el.scrollHeight}px`;
+                    }
+                  }}
+                />
+                <button
+                  className="absolute right-2 bottom-1.5 bg-sky-500 text-white p-2 rounded-lg hover:bg-sky-400 transition-all shadow-lg"
+                  type="submit"
+                  disabled={isLoading || !input.trim()}
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
+                  </svg>
+                </button>
+              </form>
+              <p className="text-[10px] text-center mt-5 text-slate-500 uppercase tracking-[0.2em] font-medium opacity-60">
+                GUIDED BY MOTION-U INTELLIGENCE
+              </p>
+            </div>
             </div>
           </div>
         </main>
