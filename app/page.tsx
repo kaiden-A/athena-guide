@@ -37,7 +37,7 @@ export default function AthenaChat() {
       try{
         const response = await fetch('/api/ask/athena', {
           method : 'POST',
-          body : JSON.stringify({question : userMsg})
+          body : JSON.stringify({question : userMsg , top_k : 3})
         });
 
         const reply = await response.json();
