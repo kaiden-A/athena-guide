@@ -8,7 +8,7 @@ export default function UpperSection() {
         <div className="bg-slate-800 rounded-full w-18 h-18 md:w-20 md:h-20 flex items-center justify-center border border-sky-500/20 animate-pulse-glow overflow-hidden">
           {/* --- Image replacement here --- */}
           <img
-            src="/athena_logo_lut.png" // Update this with your actual image path
+            src="/athena_logo.svg" // Update this with your actual image path
             alt="Athena - Motion-U Guide Avatar"
             className="w-full h-full object-cover" // Ensures the image fills the container beautifully
           />
