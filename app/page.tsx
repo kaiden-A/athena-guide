@@ -74,7 +74,11 @@ export default function AthenaChat() {
                 <div key={i} className={`flex items-start ${msg.isUser ? 'justify-end' : ''} space-x-4 animate-reveal`}>
                   {!msg.isUser && (
                     <div className="shrink-0 w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-sky-400 border border-slate-700">
-                      A
+                      <img
+                        src="/athena_logo_v3.svg" // Update this with your actual image path
+                        alt="Athena - Motion-U Guide Avatar"
+                        className="w-full h-full object-cover" // Ensures the image fills the container beautifully
+                      />
                     </div>
                   )}
                   <div className={`p-4 rounded-2xl rounded-tl-none border border-white/5 shadow-lg max-w-[85%] ${
