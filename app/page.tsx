@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 
 export default function AthenaChat() {
     const [messages, setMessages] = useState([
-      { text: "Welcome! My name is Athena and I'm happy to help you. Check out our docs at https://motion-u.com !", isUser: false }
+      { text: "Welcome! My name is Athena and I'm happy to help you", isUser: false }
     ]);
     const [input, setInput] = useState("");
     const [isLoading , setIsLoading] = useState(false);
