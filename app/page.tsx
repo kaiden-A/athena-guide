@@ -7,8 +7,13 @@ import AthenaLoading from './components/AthenaLoading';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'; 
 
+interface Message {
+  text: string;
+  isUser: boolean;
+}
+
 export default function AthenaChat() {
-    const [messages, setMessages] = useState([
+    const [messages, setMessages] = useState<Message[]>([
       { text: "Welcome! My name is Athena and I'm happy to help you", isUser: false }
     ]);
     const [input, setInput] = useState("");
@@ -27,14 +32,31 @@ export default function AthenaChat() {
       if (!input.trim()) return;
 
       const userMsg = input;
-      setMessages(prev => [...prev, { text: userMsg, isUser: true }]);
+      // 1. Instantly append the user message to the UI
+      const updatedMessages = [...messages, { text: userMsg, isUser: true }];
+      setMessages(updatedMessages);
       setInput("");
       setIsLoading(true);
 
+      // 2. Package up recent messages for conversational context.
+      // We grab the last 5 messages to avoid sending an infinitely growing history payload.
+      const conversationContext = updatedMessages.slice(-3).map(msg => ({
+        role: msg.isUser ? "user" : "assistant",
+        content: msg.text
+      }));
+
       try {
+        // 3. Send the formatted history down to your API route
         const response = await fetch('/api/ask/athena', {
           method : 'POST',
-          body : JSON.stringify({question : userMsg , top_k : 5})
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body : JSON.stringify({
+            question : userMsg, 
+            history: conversationContext, // Your API route can now read this history
+            top_k : 5
+          })
         });
 
         const reply = await response.json();
@@ -79,7 +101,6 @@ export default function AthenaChat() {
                           remarkPlugins={[remarkGfm]} 
                           components={{
                             strong: ({node, ...props}) => <span className="font-bold text-sky-400" {...props} />,
-                            
                             
                             a: ({node, href, ...props}) => (
                               <a 
