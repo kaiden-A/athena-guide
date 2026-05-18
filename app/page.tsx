@@ -5,7 +5,7 @@ import Header from './components/Header';
 import UpperSection from './components/UpperSection';
 import AthenaLoading from './components/AthenaLoading';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'; 
+import remarkGfm from 'remark-gfm'; // 1. Import the GFM plugin
 
 interface Message {
   text: string;
@@ -15,7 +15,8 @@ interface Message {
 export default function AthenaChat() {
 
     const [messages, setMessages] = useState([
-      { text: "Welcome! My name is Athena and I'm happy to help you. Check out our docs at https://motion-u.com !", isUser: false }
+
+      { text: "Welcome! My name is Athena and I'm happy to help you.", isUser: false }
 
     ]);
     const [input, setInput] = useState("");
@@ -98,9 +99,10 @@ export default function AthenaChat() {
                       msg.isUser ? 'bg-sky-500 text-white' : 'bg-slate-800/80 text-slate-200'
                     }`}>
 
+                      {/* 2. Added overflow-x-auto to ensure wide tables don't bleed out of the bubble */}
                       <div className="text-sm leading-relaxed overflow-x-auto custom-scrollbar">
                         <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]} 
+                          remarkPlugins={[remarkGfm]} // 3. Pass the plugin here
                           components={{
                             strong: ({node, ...props}) => <span className="font-bold text-sky-400" {...props} />,
                             
@@ -115,7 +117,6 @@ export default function AthenaChat() {
                                 {...props} 
                               />
                             ),
-
                             table: ({node, ...props}) => (
                               <div className="my-4 overflow-x-auto rounded-lg border border-slate-700/50">
                                 <table className="w-full text-left border-collapse text-xs" {...props} />
