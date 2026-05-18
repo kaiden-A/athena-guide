@@ -2,185 +2,270 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Header from './components/Header';
-import UpperSection from './components/UpperSection';
-import AthenaLoading from './components/AthenaLoading';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'; // 1. Import the GFM plugin
+import remarkGfm from 'remark-gfm';
 
 interface Message {
   text: string;
   isUser: boolean;
+  time?: string;
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function AthenaChat() {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      text: "Welcome! My name is Athena and I'm happy to help you navigate Motion-U today. What are you looking to build or explore?",
+      isUser: false,
+      time: getTime(),
+    }
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-    const [messages, setMessages] = useState([
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
 
-      { text: "Welcome! My name is Athena and I'm happy to help you.", isUser: false }
+  const handleClear = () => {
+    if (confirm('Are you sure you want to clear your current conversation?')) {
+      setMessages([
+        {
+          text: "Chat log cleared. How can I assist you now?",
+          isUser: false,
+          time: getTime(),
+        }
+      ]);
+    }
+  };
 
-    ]);
-    const [input, setInput] = useState("");
-    const [isLoading , setIsLoading] = useState(false);
-    const scrollRef = useRef<HTMLDivElement>(null);
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
-    // Auto-scroll to bottom when messages change
-    useEffect(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }
-    }, [messages]);
+    const userMsg = input;
+    const timestamp = getTime();
+    const updatedMessages = [...messages, { text: userMsg, isUser: true, time: timestamp }];
+    setMessages(updatedMessages);
+    setInput("");
+    setIsLoading(true);
 
-    const handleSubmit = async (e : any) => {
-      e.preventDefault();
-      if (!input.trim()) return;
+    const conversationContext = updatedMessages.slice(-3).map(msg => ({
+      role: msg.isUser ? "user" : "assistant",
+      content: msg.text,
+    }));
 
-      const userMsg = input;
-      // 1. Instantly append the user message to the UI
-      const updatedMessages = [...messages, { text: userMsg, isUser: true }];
-      setMessages(updatedMessages);
-      setInput("");
-      setIsLoading(true);
+    try {
+      const response = await fetch('/api/ask/athena', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: userMsg,
+          history: conversationContext,
+          top_k: 5,
+        }),
+      });
+      const reply = await response.json();
+      setMessages(prev => [...prev, { text: reply.answer, isUser: false, time: getTime() }]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // 2. Package up recent messages for conversational context.
-      // We grab the last 5 messages to avoid sending an infinitely growing history payload.
-      const conversationContext = updatedMessages.slice(-3).map(msg => ({
-        role: msg.isUser ? "user" : "assistant",
-        content: msg.text
-      }));
+  return (
+    <div className="celestial-bg min-h-screen font-sans text-athena-text flex flex-col overflow-hidden">
+      <Header />
 
-      try {
-        // 3. Send the formatted history down to your API route
-        const response = await fetch('/api/ask/athena', {
-          method : 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body : JSON.stringify({
-            question : userMsg, 
-            history: conversationContext, // Your API route can now read this history
-            top_k : 5
-          })
-        });
+      <div className="flex-1 flex items-center justify-center px-4 py-6">
+      <div className="flex w-full max-w-5xl h-[80vh] bg-[rgba(18,19,35,0.65)] backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
 
-        const reply = await response.json();
-        setMessages(prev => [...prev, { text: reply.answer, isUser: false }]);
-      } catch(error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        {/* ── Sidebar ── */}
+        <aside className="hidden md:flex w-64 bg-[rgba(10,11,22,0.5)] border-r border-white/[0.06] flex-col p-6 shrink-0">
+          {/* Brand */}
+          <div className="flex items-center gap-3 mb-10">
+            <img
+              src="/athena_logo_v3.svg"
+              alt="Motion-U Athena Logo"
+              className="w-8 h-8 object-contain"
+            />
+            <h2 className="text-lg font-semibold tracking-wide text-slate-100">Motion-U</h2>
+          </div>
 
-    return (
-      <div className="celestial-bg min-h-screen font-sans text-athena-text flex flex-col overflow-y-auto">
-        <Header/>
+          {/* Description */}
+          <div className="grow">
+            <h3 className="text-[0.75rem] text-slate-500 uppercase tracking-widest mb-3">Athena Guide</h3>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Curious about Motion-U? Ask away — no question is too small.
+            </p>
+          </div>
 
-        <main className="grow flex flex-col items-center px-4 py-8 relative z-10">
-          <div className="w-full max-w-2xl flex flex-col space-y-8">
-            <UpperSection/>
+          {/* Footer */}
+          <div className="font-mono text-[0.7rem] text-white/20">
+            SYSTEM // ACTIVE
+          </div>
+        </aside>
 
-            <div className="glass-effect rounded-4xl overflow-hidden flex flex-col h-100 shadow-2xl animate-fade-in [animation-delay:200ms]">
-              <div 
-                ref={scrollRef}
-                className="grow p-6 overflow-y-auto space-y-6 scroll-smooth custom-scrollbar"
-              >
-                {messages.map((msg, i) => (
-                  <div key={i} className={`flex items-start ${msg.isUser ? 'justify-end' : ''} space-x-4 animate-reveal`}>
-                    {!msg.isUser && (
-                      <div className="shrink-0 w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-sky-400 border border-slate-700">
-                        <img
-                          src="/athena_logo_v3.svg"
-                          alt="Athena - Motion-U Guide Avatar"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className={`p-4 rounded-2xl rounded-tl-none border border-white/5 shadow-lg max-w-[85%] ${
-                      msg.isUser ? 'bg-sky-500 text-white' : 'bg-slate-800/80 text-slate-200'
-                    }`}>
+        {/* ── Main Chat Window ── */}
+        <main className="flex flex-col flex-1 h-full bg-[rgba(15,16,32,0.2)] min-w-0">
 
-                      {/* 2. Added overflow-x-auto to ensure wide tables don't bleed out of the bubble */}
-                      <div className="text-sm leading-relaxed overflow-x-auto custom-scrollbar">
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]} // 3. Pass the plugin here
-                          components={{
-                            strong: ({node, ...props}) => <span className="font-bold text-sky-400" {...props} />,
-                            
-                            a: ({node, href, ...props}) => (
-                              <a 
-                                href={href} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className={`font-medium underline decoration-sky-400/50 hover:decoration-sky-400 transition-colors ${
-                                  msg.isUser ? 'text-white underline-offset-4' : 'text-sky-400 hover:text-sky-300'
-                                }`}
-                                {...props} 
-                              />
-                            ),
-                            table: ({node, ...props}) => (
-                              <div className="my-4 overflow-x-auto rounded-lg border border-slate-700/50">
-                                <table className="w-full text-left border-collapse text-xs" {...props} />
-                              </div>
-                            ),
-                            thead: ({node, ...props}) => <thead className="bg-slate-900/80 text-sky-400 uppercase tracking-wider font-semibold" {...props} />,
-                            th: ({node, ...props}) => <th className="p-3 border-b border-slate-700" {...props} />,
-                            td: ({node, ...props}) => <td className="p-3 border-b border-slate-700/40 bg-slate-800/40 max-w-xs whitespace-normal break-words" {...props} />,
-                            tr: ({node, ...props}) => <tr className="hover:bg-slate-700/20 transition-colors" {...props} />
-                          }}
-                        >
-                          {msg.text}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {isLoading && <AthenaLoading />}
+          {/* Header */}
+          <header className="flex items-center justify-between px-6 py-4 bg-[rgba(12,13,26,0.4)] border-b border-white/[0.06] shrink-0">
+            <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-full bg-slate-800 border-2 border-sky-500 shadow-[0_0_10px_rgba(56,189,248,0.3)] flex items-center justify-center overflow-hidden">
+                <img
+                  src="/athena_logo_v3.svg"
+                  alt="Athena Avatar"
+                  className="w-full h-full object-cover"
+                />
               </div>
-
-              <div className="p-4 bg-slate-900/60 border-t border-white/5 shrink-0">
-                <form className="relative flex items-end gap-2" onSubmit={handleSubmit}>
-                  <textarea
-                    rows={1}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit(e);
-                      }
-                    }}
-                    placeholder="Type something..."
-                    className="w-full py-3 pl-5 pr-14 bg-slate-800/90 rounded-xl border border-transparent focus:border-sky-500/50 focus:ring-0 transition-all text-slate-100 text-sm outline-none resize-none min-h-11.5 max-h-40 overflow-y-auto"
-                    style={{ height: 'auto' }}
-                    ref={(el) => {
-                      if (el) {
-                        el.style.height = 'auto';
-                        el.style.height = `${el.scrollHeight}px`;
-                      }
-                    }}
-                  />
-                  <button
-                    className="absolute right-2 bottom-1.5 bg-sky-500 text-white p-2 rounded-lg hover:bg-sky-400 transition-all shadow-lg"
-                    type="submit"
-                    disabled={isLoading || !input.trim()}
-                  >
-                    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"></path>
-                    </svg>
-                  </button>
-                </form>
-                <p className="text-[10px] text-center mt-5 text-slate-500 uppercase tracking-[0.2em] font-medium opacity-60">
-                  GUIDED BY MOTION-U INTELLIGENCE
-                </p>
+              <div>
+                <h2 className="text-base font-semibold text-slate-100">Athena</h2>
+                <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                  Online
+                </span>
               </div>
             </div>
-          </div>
-        </main>
+            <button
+              onClick={handleClear}
+              title="Clear Conversation"
+              className="text-slate-500 hover:text-red-400 hover:bg-red-400/10 p-2 rounded-lg transition-all"
+            >
+              {/* Trash icon */}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+              </svg>
+            </button>
+          </header>
 
-        <footer className="py-12 text-center text-[10px] text-slate-600 uppercase tracking-widest shrink-0">
-          <p>© 2026 Motion-U • Intelligence</p>
-        </footer>
+          {/* Messages */}
+          <section
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5 scroll-smooth custom-scrollbar"
+          >
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`flex gap-3 max-w-[75%] animate-reveal ${msg.isUser ? 'self-end flex-row-reverse' : 'self-start'}`}
+              >
+                {/* Avatar */}
+                <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden ${msg.isUser ? 'bg-sky-600 text-white' : 'bg-slate-800'}`}>
+                  {msg.isUser ? 'U' : (
+                    <img src="/athena_logo_v3.svg" alt="Athena" className="w-full h-full object-cover" />
+                  )}
+                </div>
+
+                {/* Bubble + timestamp */}
+                <div className={`flex flex-col gap-1 ${msg.isUser ? 'items-end' : 'items-start'}`}>
+                  <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed word-break border border-white/[0.03] shadow-md overflow-x-auto custom-scrollbar ${
+                    msg.isUser
+                      ? 'bg-sky-600 text-white rounded-tr-[2px]'
+                      : 'bg-[#1e2038] text-slate-200 rounded-tl-[2px]'
+                  }`}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        strong: ({ node, ...props }) => <span className="font-bold text-sky-400" {...props} />,
+                        a: ({ node, href, ...props }) => (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`font-medium underline decoration-sky-400/50 hover:decoration-sky-400 transition-colors ${
+                              msg.isUser ? 'text-white underline-offset-4' : 'text-sky-400 hover:text-sky-300'
+                            }`}
+                            {...props}
+                          />
+                        ),
+                        table: ({ node, ...props }) => (
+                          <div className="my-4 overflow-x-auto rounded-lg border border-slate-700/50">
+                            <table className="w-full text-left border-collapse text-xs" {...props} />
+                          </div>
+                        ),
+                        thead: ({ node, ...props }) => <thead className="bg-slate-900/80 text-sky-400 uppercase tracking-wider font-semibold" {...props} />,
+                        th: ({ node, ...props }) => <th className="p-3 border-b border-slate-700" {...props} />,
+                        td: ({ node, ...props }) => <td className="p-3 border-b border-slate-700/40 bg-slate-800/40 max-w-xs whitespace-normal break-words" {...props} />,
+                        tr: ({ node, ...props }) => <tr className="hover:bg-slate-700/20 transition-colors" {...props} />,
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
+                  </div>
+                  {msg.time && (
+                    <span className="text-[0.7rem] text-slate-500 px-1">{msg.time}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="flex gap-3 self-start">
+                <div className="shrink-0 w-8 h-8 rounded-full bg-slate-800 overflow-hidden">
+                  <img src="/athena_logo_v3.svg" alt="Athena" className="w-full h-full object-cover" />
+                </div>
+                <div className="px-4 py-3 rounded-2xl rounded-tl-[2px] bg-[#1e2038] border border-white/[0.03]">
+                  <div className="flex gap-1.5 items-center h-4">
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce [animation-delay:0ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce [animation-delay:150ms]" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce [animation-delay:300ms]" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+
+          {/* Input dock */}
+          <footer className="px-6 py-5 bg-[rgba(12,13,26,0.4)] border-t border-white/[0.06] shrink-0">
+            <form
+              onSubmit={handleSubmit}
+              className="flex items-center gap-2 bg-[rgba(30,32,56,0.5)] border border-white/[0.06] rounded-xl px-2 py-1.5 transition-all focus-within:border-sky-500 focus-within:shadow-[0_0_12px_rgba(56,189,248,0.2)] focus-within:bg-[rgba(30,32,56,0.8)]"
+            >
+              <textarea
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+                placeholder="Type something to ask Athena..."
+                className="flex-1 bg-transparent border-none outline-none text-slate-100 text-sm placeholder-slate-500/60 px-3 py-2.5 resize-none min-h-[40px] max-h-40 overflow-y-auto"
+                ref={(el) => {
+                  if (el) {
+                    el.style.height = 'auto';
+                    el.style.height = `${el.scrollHeight}px`;
+                  }
+                }}
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                className="w-9 h-9 rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 transition-all flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                title="Send Message"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
+                </svg>
+              </button>
+            </form>
+            <p className="text-[10px] text-center mt-4 text-slate-600 uppercase tracking-[0.2em] font-medium opacity-60">
+              GUIDED BY MOTION-U INTELLIGENCE
+            </p>
+          </footer>
+        </main>
       </div>
-    );
+      </div>
+    </div>
+  );
 }
