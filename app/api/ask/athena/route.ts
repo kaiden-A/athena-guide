@@ -28,7 +28,7 @@ export async function POST(request : Request){
 
         // 3. Construct the exact payload your core backend expects
         const payload = {
-            question: conversationalPrompt, 
+            question: question, 
             top_k: top_k || 5
             // If your core backend *wants* the raw history array instead, just pass: ...body
         };
