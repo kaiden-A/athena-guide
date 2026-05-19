@@ -53,7 +53,7 @@ export default function AthenaChat() {
     if (toastTimer.current) clearTimeout(toastTimer.current);
   };
 
-  const handleSubmit = async (e: any) => {
+const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -64,10 +64,14 @@ export default function AthenaChat() {
     setInput("");
     setIsLoading(true);
 
-    const conversationContext = updatedMessages.slice(-3).map(msg => ({
-      role: msg.isUser ? "user" : "assistant",
-      content: msg.text,
-    }));
+    const chatHistory = updatedMessages
+      .filter(msg => msg.text !== WELCOME.text) 
+      .slice(-3); // Keeps the last 3 exchanges
+
+
+    const formattedHistoryString = chatHistory
+      .map(msg => `${msg.isUser ? 'User' : 'Assistant'}: ${msg.text}`)
+      .join('\n');
 
     try {
       const response = await fetch('/api/ask/athena', {
@@ -75,7 +79,7 @@ export default function AthenaChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: userMsg,
-          history: conversationContext,
+          history: formattedHistoryString,
           top_k: 5,
         }),
       });

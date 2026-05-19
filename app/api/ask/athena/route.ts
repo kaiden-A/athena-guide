@@ -11,7 +11,7 @@ export async function POST(request : Request){
 
         const payload = {
             question: question, 
-            history : history,
+            history : history || "",
             top_k: top_k || 5
         };
 
