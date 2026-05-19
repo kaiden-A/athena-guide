@@ -9,28 +9,10 @@ export async function POST(request : Request){
         const body = await request.json();
         const { question, history, top_k } = body;
 
-        // 1. Format the conversation history into a readable context string
-        let historyContext = "";
-        if (history && Array.isArray(history) && history.length > 0) {
-            historyContext = history
-                .map((msg: { role: string; content: string }) => {
-                    const speaker = msg.role === 'user' ? 'User' : 'Athena';
-                    return `${speaker}: ${msg.content}`;
-                })
-                .join("\n");
-        }
-
-        // 2. Build a single conversational prompt for your RAG system
-        // This ensures one-shot logic can handle "yes", "1", or context-reliant followups.
-        const conversationalPrompt = historyContext 
-            ? `Recent chat history for context:\n${historyContext}\n\nCurrent User Input: ${question}`
-            : question;
-
-        // 3. Construct the exact payload your core backend expects
         const payload = {
             question: question, 
+            history : history,
             top_k: top_k || 5
-            // If your core backend *wants* the raw history array instead, just pass: ...body
         };
 
         const res = await axios.post(
