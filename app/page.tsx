@@ -158,53 +158,56 @@ const handleSubmit = async (e: any) => {
                       msg.isUser ? 'bg-sky-600 text-white rounded-tr-[2px]' : 'bg-[#1e2038] text-slate-200 rounded-tl-[2px]'
                     }`}>
                       
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          strong: ({ node, ...props }) => <span className="font-bold text-sky-400" {...props} />,
-                          a: ({ node, href, ...props }) => (
-                            <a
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`font-medium underline decoration-sky-400/50 hover:decoration-sky-400 transition-colors ${msg.isUser ? 'text-white underline-offset-4' : 'text-sky-400 hover:text-sky-300'}`}
-                              {...props}
-                            />
-                          ),
-                          table: ({ node, ...props }) => (
-                            <div className="my-4 overflow-x-auto rounded-lg border border-slate-700/50">
-                              <table className="w-full text-left border-collapse text-xs" {...props} />
-                            </div>
-                          ),
-                          thead: ({ node, ...props }) => <thead className="bg-slate-900/80 text-sky-400 uppercase tracking-wider font-semibold" {...props} />,
-                          th: ({ node, ...props }) => <th className="p-3 border-b border-slate-700" {...props} />,
-                          td: ({ node, ...props }) => <td className="p-3 border-b border-slate-700/40 bg-slate-800/40 max-w-xs whitespace-normal break-words" {...props} />,
-                          tr: ({ node, ...props }) => <tr className="hover:bg-slate-700/20 transition-colors" {...props} />,
-                          
-                          // ── THE TRICK: INTERCEPT PARAGRAPHS FOR EXTENDED DIRECTIVES ──
-                          p: ({ node, children }) => {
-                            const textContent = String(children);
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        
+                        h1: ({ node, ...props }) => <h1 className="text-xl font-bold text-slate-100 mt-4 mb-2 tracking-wide" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-lg font-semibold text-sky-400 mt-3 mb-2 tracking-wide" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-base font-medium text-slate-200 mt-2 mb-1" {...props} />,
 
-                            // Match :::timeline code blocks
-                            if (textContent.startsWith(':::timeline')) {
-                              const innerText = textContent.replace(':::timeline', '').replace(':::', '');
-                              return <TimelineRender>{innerText}</TimelineRender>;
-                            }
+                        // Your existing custom components
+                        strong: ({ node, ...props }) => <span className="font-bold text-sky-400" {...props} />,
+                        a: ({ node, href, ...props }) => (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`font-medium underline decoration-sky-400/50 hover:decoration-sky-400 transition-colors ${msg.isUser ? 'text-white underline-offset-4' : 'text-sky-400 hover:text-sky-300'}`}
+                            {...props}
+                          />
+                        ),
+                        table: ({ node, ...props }) => (
+                          <div className="my-4 overflow-x-auto rounded-lg border border-slate-700/50">
+                            <table className="w-full text-left border-collapse text-xs" {...props} />
+                          </div>
+                        ),
+                        thead: ({ node, ...props }) => <thead className="bg-slate-900/80 text-sky-400 uppercase tracking-wider font-semibold" {...props} />,
+                        th: ({ node, ...props }) => <th className="p-3 border-b border-slate-700" {...props} />,
+                        td: ({ node, ...props }) => <td className="p-3 border-b border-slate-700/40 bg-slate-800/40 max-w-xs whitespace-normal break-words" {...props} />,
+                        tr: ({ node, ...props }) => <tr className="hover:bg-slate-700/20 transition-colors" {...props} />,
+                        
+                        p: ({ node, children }) => {
+                          const textContent = String(children);
 
-                            // Match :::component dynamic blocks
-                            if (textContent.startsWith(':::component')) {
-                              const jsonMatch = textContent.match(/\{([\s\S]*)\}/);
-                              if (jsonMatch) {
-                                return <TargetAudienceCard data={jsonMatch[0]} />;
-                              }
-                            }
-
-                            return <p className="mb-2 last:mb-0">{children}</p>;
+                          if (textContent.startsWith(':::timeline')) {
+                            const innerText = textContent.replace(':::timeline', '').replace(':::', '');
+                            return <TimelineRender>{innerText}</TimelineRender>;
                           }
-                        }}
-                      >
-                        {msg.text}
-                      </ReactMarkdown>
+
+                          if (textContent.startsWith(':::component')) {
+                            const jsonMatch = textContent.match(/\{([\s\S]*)\}/);
+                            if (jsonMatch) {
+                              return <TargetAudienceCard data={jsonMatch[0]} />;
+                            }
+                          }
+
+                          return <p className="mb-2 last:mb-0">{children}</p>;
+                        }
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
 
                     </div>
                     {msg.time && <span className="text-[0.7rem] text-slate-500 px-1">{msg.time}</span>}
