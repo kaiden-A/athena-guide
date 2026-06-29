@@ -236,6 +236,7 @@ const handleSubmit = async (e: any) => {
             <footer className="px-6 py-5 bg-[rgba(12,13,26,0.4)] border-t border-white/[0.06] shrink-0">
               <form onSubmit={handleSubmit} className="flex items-center gap-2 bg-[rgba(30,32,56,0.5)] border border-white/[0.06] rounded-xl px-2 py-1.5 transition-all focus-within:border-sky-500 focus-within:shadow-[0_0_12px_rgba(56,189,248,0.2)] focus-within:bg-[rgba(30,32,56,0.8)]">
                 <textarea
+                  aria-label="Ask Athena a question"
                   rows={1}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -254,7 +255,7 @@ const handleSubmit = async (e: any) => {
                     }
                   }}
                 />
-                <button type="submit" disabled={isLoading || !input.trim()} className="w-9 h-9 rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 transition-all flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+                <button type="submit" disabled={isLoading || !input.trim()} aria-label={isLoading ? "Athena is thinking…" : "Send message"} className="w-9 h-9 rounded-lg bg-sky-500 hover:bg-sky-400 active:scale-95 transition-all flex items-center justify-center text-white disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
                   </svg>

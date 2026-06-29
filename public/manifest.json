@@ -1,0 +1,19 @@
+{
+  "name": "Athena — Motion-U AI Guide",
+  "short_name": "Athena",
+  "description": "Your intelligent AI guide to the Motion-U ecosystem.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "en",
+  "categories": ["productivity", "education", "developer tools"]
+}
